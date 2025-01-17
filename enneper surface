@@ -1,0 +1,91 @@
+import pyvista as pv
+import numpy as np
+import trimesh
+import os
+import tqdm
+import pyacvd
+
+
+#load in xyz coordinates
+stepsize = 0.05
+thickness = 0.5
+
+u_width = 1.4
+v_width = 1.4
+
+u_min = -0.7
+v_min = -0.7
+
+u_array = []
+v_array = []
+
+xcoords = []
+ycoords = []
+zcoords = []
+
+verts = []
+edges = []
+faces = []
+
+#xindex = int((u_width/stepsize)+1)
+#yindex = int((y_width/stepsize)+1)
+
+i = 0
+while i<u_width+stepsize:
+    u_array.append(u_min+i)
+    i += stepsize
+
+i = 0
+while i<v_width+stepsize:
+    v_array.append(u_min+i)
+    i += stepsize
+
+for u in u_array:
+    for v in v_array:
+        x = (u - u**3/3 + u*v**2)*4
+        y = 3*(u**2 - v**2)
+        z = (v - v**3/3 + v*u**2)*4
+        verts.append((x, y, z))
+        #verts.append((x, y+thickness, z))
+
+
+cloud = pv.PolyData(verts)
+
+print(cloud)
+
+#plot of points inside each mask, separated by some distance
+#cloud.plot(screenshot='pointcloud.png')
+
+#set alpha parameter
+alpha=1.0
+#set tol parameter
+tol = 1e-1
+
+#run delaunay 3D triangulation
+mesh = cloud.delaunay_3d(alpha=alpha, progress_bar = True)
+mesh = mesh.extract_surface()
+mesh = mesh.delaunay_2d(alpha=alpha, progress_bar = True)
+#mesh = cloud.reconstruct_surface(nbr_sz = 60, progress_bar = True)
+mesh = mesh.extrude((0,thickness,0), capping=True)
+#mesh = mesh.fill_holes(hole_size=1.0, inplace = True, progress_bar=True)
+
+mesh.save("/Users/edouardsavalle/Documents/blenderexports/enneper_surface.stl")
+
+mesh.plot(screenshot="surface.png", show_axes=True, border=True)
+
+
+
+pv.save_meshio("mesh.stl", mesh)
+
+#print(f'STL file saved to: {file_path}')
+
+directory = '/Users/edouardsavalle/Documents/blenderexports/hyperboloid'
+# Specify the path where you want to save the STL file
+filename = 'mold_t=5mm_r=20mm.stl'
+
+os.makedirs(directory, exist_ok=True)
+
+file_path = os.path.join(directory, filename)
+surface.save(file_path)
+
+mesh.save(file_path)
