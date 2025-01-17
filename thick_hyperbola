@@ -1,0 +1,60 @@
+import trimesh
+import os
+import pyvista as pv
+from scipy.spatial import Delaunay
+from scipy.spatial import ConvexHull
+
+
+stepsize = 1
+
+x_width = 40
+y_width = 40
+
+x_init = -x_width/2
+y_init = -y_width/2
+
+xcoords = []
+ycoords = []
+zcoords = []
+
+verts = []
+edges = []
+faces = []
+
+xindex = int((x_width/stepsize)+1)
+yindex = int((y_width/stepsize)+1)
+
+i = 0
+while i<x_width+stepsize:
+    xcoords.append(x_init+i)
+    i += stepsize
+
+i = 0
+while i<y_width+stepsize:
+    ycoords.append(y_init+i)
+    i += stepsize
+
+for x in xcoords:
+    for y in ycoords:
+        z = (x**2)/30-(y**2)/20
+        coord = (x, y, z)
+        verts.append(coord)
+        zcoords.append(z)
+
+size = yindex*xindex
+
+for a in range(0, 400, xindex):
+    i=a
+    while i < a+xindex-1:
+        face1 = (i, i+1, i+xindex+1)
+        face2 = (i, i+xindex+1, i+xindex)
+        faces.append(face1)
+        faces.append(face2)
+        i += 1
+#above is the creation of the hyperbolic paraboloid(pringle)
+
+cloud = pv.PolyData(verts)
+mesh = cloud.delaunay_2d(alpha=5)
+mesh = mesh.extrude(vector=(0, 0, 1.5), capping=True)
+mesh.save("/Users/edouardsavalle/Documents/blenderexports/thick_hyperbola.stl")
+mesh.plot(screenshot="surface.png", show_axes=True, border=True)
